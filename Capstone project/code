@@ -1,1 +1,233 @@
+#include <stdio.h>
+#include <string.h>
 
+#define MAX 5
+
+struct Patient
+{
+    int id;
+    char name[50];
+    int age;
+    char department[30];
+    char priority[20];
+    int token;
+    int completed;
+};
+
+// Function to calculate priority rank
+int getPriority(char priority[])
+{
+    if (strcmp(priority, "Emergency") == 0)
+        return 1;
+    else if (strcmp(priority, "Urgent") == 0)
+        return 2;
+    else
+        return 3;
+}
+
+// Function to register patients
+void registerPatients(struct Patient p[])
+{
+    int i, choice;
+    static int tokenNumber = 100;
+
+    for (i = 0; i < MAX; i++)
+    {
+        printf("\n----- PATIENT %d REGISTRATION -----\n", i + 1);
+
+        printf("Enter Patient ID: ");
+        scanf("%d", &p[i].id);
+
+        printf("Enter Patient Name: ");
+        scanf(" %49[^\n]", p[i].name);
+
+        printf("Enter Patient Age: ");
+        scanf("%d", &p[i].age);
+
+        printf("Enter Department: ");
+        scanf(" %29[^\n]", p[i].department);
+
+        p[i].token = ++tokenNumber;
+        p[i].completed = 0;
+
+        printf("\nSelect Priority:\n");
+        printf("1. Emergency\n");
+        printf("2. Urgent\n");
+        printf("3. Normal\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice)
+        {
+            case 1:
+                strcpy(p[i].priority, "Emergency");
+                break;
+
+            case 2:
+                strcpy(p[i].priority, "Urgent");
+                break;
+
+            case 3:
+                strcpy(p[i].priority, "Normal");
+                break;
+
+            default:
+                strcpy(p[i].priority, "Normal");
+                printf("Invalid choice. Normal priority assigned.\n");
+        }
+    }
+}
+
+// Function to sort patients based on priority
+void sortPatients(struct Patient p[])
+{
+    int i, j;
+    struct Patient temp;
+
+    for (i = 0; i < MAX - 1; i++)
+    {
+        for (j = 0; j < MAX - 1 - i; j++)
+        {
+            if (getPriority(p[j].priority) >
+                getPriority(p[j + 1].priority))
+            {
+                temp = p[j];
+                p[j] = p[j + 1];
+                p[j + 1] = temp;
+            }
+        }
+    }
+}
+
+// Function to save patient details
+void savePatients(struct Patient p[])
+{
+    int i;
+    FILE *fp;
+
+    fp = fopen("patients.txt", "w");
+
+    if (fp == NULL)
+    {
+        printf("\nError opening file!\n");
+        return;
+    }
+
+    fprintf(fp, "HOSPITAL PATIENT RECORDS\n");
+
+    for (i = 0; i < MAX; i++)
+    {
+        fprintf(fp, "\nPatient ID: %d\n", p[i].id);
+        fprintf(fp, "Patient Name: %s\n", p[i].name);
+        fprintf(fp, "Age: %d\n", p[i].age);
+        fprintf(fp, "Department: %s\n", p[i].department);
+        fprintf(fp, "Token Number: %d\n", p[i].token);
+        fprintf(fp, "Priority: %s\n", p[i].priority);
+    }
+
+    fclose(fp);
+
+    printf("\nPatient details saved in patients.txt!\n");
+}
+
+// Function to display all patients
+void displayPatients(struct Patient p[])
+{
+    int i;
+
+    printf("\n========== PATIENT QUEUE ==========\n");
+
+    for (i = 0; i < MAX; i++)
+    {
+        printf("\nToken Number: %d\n", p[i].token);
+        printf("Patient ID: %d\n", p[i].id);
+        printf("Name: %s\n", p[i].name);
+        printf("Age: %d\n", p[i].age);
+        printf("Department: %s\n", p[i].department);
+        printf("Priority: %s\n", p[i].priority);
+        printf("Status: %s\n",
+               p[i].completed ? "Completed" : "Waiting");
+    }
+}
+
+// Function to manage patient queue
+void manageQueue(struct Patient p[])
+{
+    int nextPatient = 0;
+    int menu;
+
+    while (nextPatient < MAX)
+    {
+        printf("\n========== PATIENT QUEUE MENU ==========\n");
+        printf("1. Call Next Patient\n");
+        printf("2. Mark Consultation Completed\n");
+        printf("3. Display Current Patient\n");
+        printf("4. Display All Patients\n");
+        printf("5. Exit\n");
+
+        printf("Enter your choice: ");
+        scanf("%d", &menu);
+
+        switch (menu)
+        {
+            case 1:
+                printf("\n----- NEXT PATIENT CALLED -----\n");
+                printf("Token: %d\n", p[nextPatient].token);
+                printf("Name: %s\n", p[nextPatient].name);
+                printf("Department: %s\n",
+                       p[nextPatient].department);
+                printf("Priority: %s\n",
+                       p[nextPatient].priority);
+                break;
+
+            case 2:
+                p[nextPatient].completed = 1;
+
+                printf("\nConsultation completed for %s.\n",
+                       p[nextPatient].name);
+
+                nextPatient++;
+                break;
+
+            case 3:
+                printf("\n----- CURRENT PATIENT -----\n");
+                printf("Token: %d\n", p[nextPatient].token);
+                printf("Name: %s\n", p[nextPatient].name);
+                printf("Priority: %s\n",
+                       p[nextPatient].priority);
+                break;
+
+            case 4:
+                displayPatients(p);
+                break;
+
+            case 5:
+                printf("\nExiting Patient Queue System.\n");
+                return;
+
+            default:
+                printf("\nInvalid choice. Try again.\n");
+        }
+    }
+
+    printf("\nAll patient consultations are completed!\n");
+}
+
+int main()
+{
+    struct Patient p[MAX];
+
+    printf("====================================\n");
+    printf(" HOSPITAL PATIENT QUEUE SYSTEM\n");
+    printf("====================================\n");
+
+    registerPatients(p);
+
+    sortPatients(p);
+
+    savePatients(p);
+
+    manageQueue(p);
+
+    return 0;
+}
